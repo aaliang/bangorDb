@@ -1,0 +1,11 @@
+[package]
+name = "bangor"
+version = "0.1.0"
+authors = ["Andy Liang <andy.liang@indicative.com>"]
+
+[dependencies]
+futures = "0.1.6"
+
+[[bin]]
+name = "main"
+src = "src/main.rs"
