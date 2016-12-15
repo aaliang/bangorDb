@@ -2,6 +2,7 @@ use std::io::{Read, BufReader, Write, BufWriter, Error};
 use std::fs::{create_dir_all, File, OpenOptions};
 use std::collections::HashMap;
 use std::path::Path;
+
 pub struct DBIO {
   fd_cache: LRUCache<BufWriter<File>>
 }
@@ -15,6 +16,8 @@ impl DBIO {
     }
   }
 
+  /// appends data to the file at [`path`]. The file and any parent directories will be created if they
+  /// do not exist.
   pub fn append(&mut self, path: &str, data: &[u8]) -> Result<(), Error> {
     if let Some(ref mut fd) = self.fd_cache.get_mut(path) {
       return fd.write_all(data)
@@ -32,8 +35,7 @@ impl DBIO {
 
     let mut bw = BufWriter::new(file);
     try!(bw.write_all(data));
-    self.fd_cache.insert(path.to_owned(), bw);
-    Ok(())
+    Ok(self.fd_cache.insert(path.to_owned(), bw))
   }
 }
 
