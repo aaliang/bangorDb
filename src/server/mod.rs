@@ -35,10 +35,10 @@ impl Server {
         Box::new(done)
     }
 
-    pub fn place<A>(from: A) -> BangRequest<A> where A: Read {
-        BangRequest {
+    pub fn place<A>(from: A) -> RequestReader<A> where A: Read {
+        RequestReader {
             state: State::Reading{
-                a: from,
+                reader: from,
                 buf: Vec::new(),
                 pos: 0
             }
@@ -46,34 +46,36 @@ impl Server {
     }
 }
 
-enum State<A, T> {
+enum State<A, T> where T: AsMut<[u8]>{
     Reading {
-        a: A,
+        reader: A,
         buf: T,
         pos: usize,
     },
     Empty,
 }
 
-pub struct BangRequest<A> where A: Read {
+pub struct RequestReader<A> where A: Read {
     state: State<A, Vec<u8>>
 }
 
 use futures::{Async, Poll};
 
-impl <A> BangRequest<A> where A: Read {
-    fn parse_request(&mut self) {
-        match self.state {
-            _ => ()
-        };
+impl <A> RequestReader<A> where A: Read {
+    fn parse_request(reader: &mut A, buf: &mut [u8], ps: &mut usize) {
+        reader.read(buf);
     }
 }
 
-impl <A> Future for BangRequest<A> where A: Read {
+impl <A> Future for RequestReader<A> where A: Read {
     type Item = usize;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<usize, Error> {
+        match self.state {
+            State::Reading {ref mut reader, ref mut buf, ref mut pos} => Self::parse_request(reader, buf, pos),
+            State::Empty => ()
+        }
         Ok(Async::Ready(4))
     }
 }

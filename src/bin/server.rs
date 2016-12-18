@@ -28,16 +28,31 @@ use futures::future::Future;
 use tokio_core::net::TcpStream;
 use std::io::Read;
 
+fn s(event_loop: &mut Core) {
+    loop {
+        let addr = &"127.0.0.1:9001".parse::<SocketAddr>().unwrap();
+        let handle = event_loop.handle();
+        let future = TcpStream::connect(&addr, &handle).map(|mut stream|{
+            let mut buf = Vec::new();
+            stream.read_to_end(&mut buf);
+            println!("{:?}", buf);
+        });
+
+        match event_loop.run(future) {
+            Ok(res) => {
+                println!("connected");
+                break;
+            },
+            Err(e) => {
+                println!("retrying");
+            }
+        }
+    }
+}
+
 fn client_connect() {
     let mut event_loop = Core::new().unwrap();
-    let addr = &"127.0.0.1:9001".parse::<SocketAddr>().unwrap();
-    let handle = event_loop.handle();
-    let future = TcpStream::connect(&addr, &handle).map(|mut stream|{
-        let mut buf = Vec::new();
-        stream.read_to_end(&mut buf);
-        println!("{:?}", buf);
-    });
-    event_loop.run(future).unwrap();
+    s(&mut event_loop);
 }
 
 use std::thread;
