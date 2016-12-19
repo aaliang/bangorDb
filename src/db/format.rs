@@ -53,7 +53,7 @@ pub mod RowFormat {
     }
 
 
-    fn as_u32_be(array: &[u8; 4]) -> u32 {
+    fn as_u32_be(array: &[u8]) -> u32 {
         ((array[0] as u32) << 24) |
         ((array[1] as u32) << 16) |
         ((array[2] as u32) <<  8) |
@@ -62,10 +62,11 @@ pub mod RowFormat {
 
 
     // wtf... this is a shitshow
-    pub fn read_row<'a, R>(r: R, sz: &'static mut [u8; 4]) -> Box<Future<Item=Vec<u8>, Error=Error>> where R: Read + Send + 'static {
+    pub fn read_row<R>(r: R) -> Box<Future<Item=Vec<u8>, Error=Error>> where R: Read + Send + 'static {
+        let mut sz = Vec::with_capacity(4);
         let future = io::read_exact(r, sz)
             .and_then(|(_r, _sz)| {
-                let sz_u32 = as_u32_be(_sz);
+                let sz_u32 = as_u32_be(&_sz);
                 let mut buf = Vec::with_capacity(sz_u32 as usize);
                 io::read_exact(_r, buf)
             })
