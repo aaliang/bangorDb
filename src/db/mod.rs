@@ -1,3 +1,5 @@
+pub mod format;
+
 use std::io::{Read, BufReader, Write, BufWriter, Error};
 use std::fs::{create_dir_all, File, OpenOptions};
 use std::collections::HashMap;
